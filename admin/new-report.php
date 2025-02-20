@@ -109,32 +109,7 @@ require "admin_left_panel.php";
                 <div class="white-box">
                     <h3 class="box-title m-b-0"><i class="fa fa-file-text fa-3x"></i> Generate Reports</h3>
                     <p class="text-muted m-b-30 font-13"> Select report type: </p>
-
                     <div class="row">
-                        <div class="col-md-6">
-                            <h4>Monthly Report</h4>
-                            <form action="new-report.php" method="post">
-                                <div class="form-group">
-                                    <label for="month">Month:</label>
-                                    <select name="month" id="month" class="form-control" required>
-                                        <?php for ($m = 1; $m <= 12; $m++): ?>
-                                        <option value="<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>">
-                                            <?= date('F', mktime(0, 0, 0, $m, 10)) ?>
-                                        </option>
-                                        <?php endfor; ?>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="year">Year:</label>
-                                    <input type="number" name="year" id="year" 
-                                        class="form-control"
-                                        min="2020" max="<?= date('Y') ?>" 
-                                        value="<?= date('Y') ?>" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Generate Monthly Report</button>
-                            </form>
-                        </div>
-                        
                         <div class="col-md-6">
                             <h4>Individual Tenant Report</h4>
                             <form action="generate-tenant-report.php" method="post">
@@ -148,17 +123,19 @@ require "admin_left_panel.php";
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <button type="submit" class="btn btn-success">Generate Tenant Report</button>
                             </form>
+                            <button type="submit" class="btn btn-success">Generate Tenant Report</button>
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <footer class="footer text-center"> 2025 &copy; Company Admin </footer>
     </div>
 </div>
+
+<footer class="footer text-center"> 2025 &copy; Company Admin </footer>
 
 <!-- Scripts -->
 <script src="../plugins/bower_components/jquery/dist/jquery.min.js"></script>

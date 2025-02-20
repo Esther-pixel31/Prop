@@ -156,7 +156,7 @@
                                             <td>'.$row["amountPaid"].'</td>
                                             <td>'.$row["balance"].'</td>
                                             <td>'.$row["dateofPayment"].'</td>
-                                            <td><a href="#"><i class="fa fa-tras"  data-toggle="modal" data-target="#responsive-modal'.$row["paymentID"].'" title="delete" style="color:red;"></i></a></td>
+                                            <td><a href="#"><i class="fa fa-trash"  data-toggle="modal" data-target="#responsive-modal'.$row["paymentID"].'" title="delete" style="color:red;"></i></a></td>
                                        
 
                                             <!-- /.modal -->
@@ -169,7 +169,7 @@
                                                             </div>
                                                         <div class="modal-footer">
 
-                                                        <form action="payments.php" method="post">
+                                                        <form action="functions/del_payment.php" method="post">
                                                         <input type="hidden" name="tenID" value="'.
                                                         $row["paymentID"].'"/>
                                                             <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Cancel</button>
