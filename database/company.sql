@@ -111,7 +111,6 @@ CREATE TABLE `houses` (
   `houseID` int(11) NOT NULL,
   `house_name` text NOT NULL,
   `number_of_rooms` int(10) NOT NULL,
-  `rent_amount` double NOT NULL,
   `garbage` int(11) NOT NULL,
   `location` text NOT NULL,
   `num_of_bedrooms` int(10) NOT NULL,
@@ -134,7 +133,8 @@ INSERT INTO `houses` (`houseID`, `house_name`, `number_of_rooms`, `rent_amount`,
 CREATE TABLE `house_numbers` (
   `id` int(11) NOT NULL,
   `house_id` int(11) NOT NULL,
-  `house_no` varchar(255) NOT NULL
+  `house_no` varchar(255) NOT NULL,
+  `rent_amount` double NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
