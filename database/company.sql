@@ -111,6 +111,7 @@ CREATE TABLE `houses` (
   `houseID` int(11) NOT NULL,
   `house_name` text NOT NULL,
   `number_of_rooms` int(10) NOT NULL,
+  `rent_amount` double NOT NULL,
   `garbage` int(11) NOT NULL,
   `location` text NOT NULL,
   `num_of_bedrooms` int(10) NOT NULL,
