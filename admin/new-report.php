@@ -123,8 +123,9 @@ require "admin_left_panel.php";
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                <button type="submit" class="btn btn-success">Generate Tenant Report</button>
+
                             </form>
-                            <button type="submit" class="btn btn-success">Generate Tenant Report</button>
 
                         </div>
                     </div>

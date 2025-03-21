@@ -72,7 +72,6 @@
                     <li><a href="#" class="waves-effect"><i class="fa fa-money fa-2x"></i> <span class="hide-menu"> || Reports <span class="fa arrow"></span></span></a>
                         <ul class="nav nav-second-level">
                             <li><a href="new-report.php">New Report</a></li>
-                            <li><a href="reports.php">View Reports</a></li>
                             
                         </ul>
                     </li>

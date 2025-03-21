@@ -21,17 +21,18 @@ function tenantInvoicedForCurrentMonth($tenantID, $conn) {
     $currentMonth = date('Y-m');
     $query = "SELECT COUNT(*) FROM invoices WHERE tenantID = ? AND DATE_FORMAT(dateOfInvoice, '%Y-%m') = ? AND amountDue > 0";
 
-        if ($stmt = $conn->prepare($query)) {
-            $stmt->bind_param("is", $tenantID, $currentMonth);
-            $stmt->execute();
-            $stmt->bind_result($count);
-            $stmt->fetch();
-            $stmt->close();
-            return $count > 0;
-        } else {
-            return false; // Error preparing query
-        }
+    if ($stmt = $conn->prepare($query)) {
+        $stmt->bind_param("is", $tenantID, $currentMonth);
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+        return $count > 0;
+    } else {
+        return false; // Error preparing query
     }
+}
+
 
     // Fetch tenant names for the dropdown
     $tenant_query = "SELECT tenantID, tenant_name FROM tenants";
@@ -83,7 +84,65 @@ function tenantInvoicedForCurrentMonth($tenantID, $conn) {
                 return 0; // Error preparing query, set balance to 0
             }
         }
+        
+            // Function to generate an invoice considering only overpayments
+        // Function to generate an invoice considering only overpayments
+    // Function to generate an invoice considering only overpayments
+    function generateInvoice($tenantID, $conn) {
+        // Fetch outstanding balance and rent amount
+        $balance = getOutstandingBalance($tenantID, $conn);
+    
+        $query = "SELECT h.rent_amount FROM tenants t JOIN house_numbers h ON t.house_number = h.house_number WHERE t.tenantID = ?";
+        
+        if ($stmt = $conn->prepare($query)) {
+            $stmt->bind_param("i", $tenantID);
+            $stmt->execute();
+            $stmt->bind_result($rent_amount);
+            $stmt->fetch();
+            $stmt->close();
+        } else {
+            return "Error fetching tenant details.";
+        }
+    
+        // Only deduct from the invoice if there was an overpayment (negative balance)
+        $amountDue = $rent_amount;
+        if ($balance < 0) {
+            $amountDue += $balance; // Deduct overpayment from invoice
+        }
+    
+        // Ensure amount due is not negative
+        if ($amountDue < 0) {
+            $amountDue = 0;
+        }
+    
+        // Reset the tenant balance only if an overpayment was used
+        if ($balance < 0) {
+            $updateBalanceQuery = "UPDATE tenants SET balance = 0 WHERE tenantID = ?";
+            if ($stmt = $conn->prepare($updateBalanceQuery)) {
+                $stmt->bind_param("i", $tenantID);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+    
+        // Insert new invoice record
+        $insertInvoiceQuery = "INSERT INTO invoices (tenantID, amountDue, dateOfInvoice) VALUES (?, ?, NOW())";
+        if ($stmt = $conn->prepare($insertInvoiceQuery)) {
+            $stmt->bind_param("id", $tenantID, $amountDue);
+            $stmt->execute();
+            $stmt->close();
+            return "Invoice generated: Amount Due = " . number_format($amountDue, 2);
+        } else {
+            return "Error generating invoice.";
+        }
+    }
 
+        
+        // Call the function to generate invoice if needed
+        if (isset($_POST['generate_invoice']) && isset($_POST['tenant_id'])) {
+            $tenantID = $_POST['tenant_id'];
+            echo generateInvoice($tenantID, $conn);
+        }
         
 
         // Handle form submission
@@ -104,7 +163,7 @@ function tenantInvoicedForCurrentMonth($tenantID, $conn) {
 $totalConsumption = ($currentReading - $previousReading) * $waterRate;
 
 // Calculate total amount
-$totalAmount = $rent + $garbage + $totalConsumption;
+$totalAmount = $rent + $garbage + $totalConsumption + $outstandingBalance;
 
 // Insert invoice data into the database
 $insert_query = "INSERT INTO invoices (invoiceNumber, tenantID, dateOfInvoice, dateDue, amountDue, totalAmount) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE amountDue = amountDue + VALUES(amountDue)";
@@ -352,7 +411,7 @@ if ($stmt = $conn->prepare($insert_query)) {
                 <!-- /.right-sidebar -->
             </div>
 
-            <footer class="footer text-center"> 2018 &copy; Company Admin </footer>
+            <footer class="footer text-center"> 2025 &copy; Company Admin </footer>
         </div>
         <!-- /#page-wrapper -->
     </div>
@@ -423,29 +482,52 @@ if ($stmt = $conn->prepare($insert_query)) {
             });
         </script>
 
+        <script>
+            document.getElementById('tenant_id').addEventListener('change', function() {
+    var tenantID = this.value;
+
+    if (tenantID) {
+        fetch('get_balance.php?tenant_id=' + tenantID)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('balance').value = data.balance; 
+        })
+        .catch(error => console.error('Error fetching balance:', error));
+    } else {
+        document.getElementById('balance').value = "";
+    }
+});
+
+        </script>
+
 <script>
 document.getElementById('calculate').addEventListener('click', function() {
-    // Get values from the form fields
     var rent = parseFloat(document.getElementById('rent').value) || 0;
     var garbage = parseFloat(document.getElementById('garbage').value) || 0;
     var currentReading = parseFloat(document.getElementById('current_reading').value) || 0;
     var previousReading = parseFloat(document.getElementById('previous_reading').value) || 0;
-
     var waterRate = parseFloat(document.getElementById('water_rate').value) || 0;
+    var outstandingBalance = parseFloat(document.getElementById('balance').value) || 0; // Get balance
 
     // Calculate total consumption
     var totalConsumption = (currentReading - previousReading) * waterRate;
 
-    console.log("Rent:", rent);
-    console.log("Garbage:", garbage);
-    console.log("Total Consumption:", totalConsumption);
-    
     // Calculate total amount
-    var totalAmount = rent + garbage + totalConsumption; // Corrected variable name
+    var totalAmount = rent + garbage + totalConsumption;
+
+    // If the outstanding balance is negative, deduct it and reset it
+    if (outstandingBalance < 0) {
+        totalAmount += outstandingBalance; // Deduct the negative balance
+        document.getElementById('balance').value = "0"; // Reset balance to 0
+    }
+
+    // Ensure total does not go below 0
+    totalAmount = Math.max(totalAmount, 0);
 
     // Update the total amount field
     document.getElementById('t_amount').value = totalAmount.toFixed(2);
 });
+
 </script>
     <!--END of local JS -->
 

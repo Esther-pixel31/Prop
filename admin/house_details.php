@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['tenant_id'])) {
         SELECT 
             houses.house_name,
             house_numbers.house_no,
-            houses.rent_amount AS rent,
+            house_numbers.rent_amount AS rent,
             houses.garbage,
             water_readings.current_reading,
             water_readings.previous_reading,

@@ -114,7 +114,6 @@
                                                         <th>House ID</th>
                                                         <th>House Name</th>
                                                         <th>No. of rooms</th>
-                                                        <th>Rent amount</th>
                                                         <th>Location</th>
                                                         <th>Bedrooms</th>
                                                         <th>House Status</th>
@@ -126,7 +125,6 @@
                                                         <th>House ID</th>
                                                         <th>House Name</th>
                                                         <th>No. of rooms</th>
-                                                        <th>Rent amount</th>
                                                         <th>Location</th>
                                                         <th>Bedrooms</th>
                                                         <th>House Status</th>
@@ -151,7 +149,6 @@
                                             '.$row["house_name"].' </a>
                                             </td>
                                             <td>'.$row["number_of_rooms"].'</td>
-                                            <td>'.$row["rent_amount"].'</td>
                                             <td>'.$row["location"].'</td>
                                             <td>'.$row["num_of_bedrooms"].'</td>
                                             <td>'.$row["house_status"].'</td>
@@ -199,12 +196,7 @@
                                                                     required class="form-control" id="temail" placeholder="e.g 1"> </div>
                                                             </div>
 
-                                                            <div class="form-group col-md-12">
-                                                                <label for="idnum">Rent Amount: *</label>
-                                                                <div class="input-group">
-                                                                    <div class="input-group-addon"><i class="fa fa-home"></i></div>
-                                                                    <input type="number" min="1000" required name="rent" class="form-control" value="'.$row["rent_amount"].'" id="idnum" placeholder="e.g. 4000" onkeyup="stripnum(\'idnum\',10);" > </div>
-                                                            </div>
+                                                    
 
                                                             <input type="text" value="'.$row["houseID"].'" name="hsid" readonly hidden>
 

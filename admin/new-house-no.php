@@ -40,6 +40,7 @@ $result = mysqli_query($connection, $sql);
     // Sanitize inputs
     $house_id = mysqli_real_escape_string($connection, $_POST['house_id']);
     $house_no = mysqli_real_escape_string($connection, $_POST['house_no']);
+    $rent = mysqli_real_escape_string($connection, $_POST['rent_amount']);
 
     // Check the number of existing house numbers for the selected house
     $existing_house_numbers_query = "SELECT COUNT(*) as count FROM house_numbers WHERE house_id = '$house_id'";
@@ -72,8 +73,12 @@ $result = mysqli_query($connection, $sql);
 
         $error = "Cannot add more house numbers.";
     } else {
-        // Insert the house number along with the status
-        $sql = "INSERT INTO house_numbers (house_id, house_no) VALUES ('$house_id', '$house_no')";
+        // Get and sanitize rent amount
+        $rent_amount = mysqli_real_escape_string($connection, $_POST['rent']);
+        
+        // Insert the house number along with the rent amount
+        $sql = "INSERT INTO house_numbers (house_id, house_no, rent_amount) VALUES ('$house_id', '$house_no', '$rent_amount')";
+
         $query = mysqli_query($connection, $sql);
 
         if ($query) {
@@ -136,7 +141,13 @@ $result = mysqli_query($connection, $sql);
                                     </div>
                                 </div>
 
-        
+                                <div class="form-group">
+                                        <label for="rent">Rent amount (PM): *</label>
+                                        <div class="input-group">
+                                            <div class="input-group-addon"><i class="fa fa-usd"></i></div>
+                                            <input type="number" required min="0" name="rent" class="form-control" id="rent" placeholder="Rent per month. e.g. 3000" required=""> </div>
+                                    </div>
+
 
                                 <button type="submit" name="submit" class="btn btn-success btn-lg waves-effect waves-light m-r-10 center"><i class="fa fa-plus-circle fa-lg"></i> Add House Number</button>
                             </form>

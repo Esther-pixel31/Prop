@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             tenants.tenant_name, 
             houses.house_name, 
             house_numbers.house_no, 
-            houses.rent_amount AS rent, 
+            house_numbers.rent_amount AS rent, 
             houses.garbage AS garbage, 
             water_readings.previous_reading, 
             water_readings.current_reading, 

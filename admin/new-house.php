@@ -32,7 +32,6 @@ if (is_logged_in_temporary()) {
         $hname = is_username($_POST['hname']);
         $numofrooms = uncrack($_POST['number_of_rooms']);
         $numOfbRooms = uncrack($_POST['numOfbRooms']);
-        $rent = uncrack($_POST['rent']);
         $garbage = uncrack($_POST['garbage']); // New field
         $location = uncrack($_POST['location']);
 
@@ -40,11 +39,11 @@ if (is_logged_in_temporary()) {
         
             // insert the data
             $sq = "INSERT INTO `houses` 
-            (`house_name`, `number_of_rooms`, `rent_amount`, `garbage`, `location`, `num_of_bedrooms`) 
-            VALUES ('$hname', '$numofrooms', '$rent', '$garbage', '$location', '$numOfbRooms');";
+            (`house_name`, `number_of_rooms`, `garbage`, `location`, `num_of_bedrooms`) 
+            VALUES ('$hname', '$numofrooms', '$garbage', '$location', '$numOfbRooms');";
 
             $sql_transactions = "INSERT INTO `transactions` (`actor`, `time`, `description`)
-            VALUES ('Admin ($username)', '$timesnap', '$username added a new property ($hname) with $numofrooms number of rooms, $numOfbRooms bedrooms per unit, located in $location, with a rent of $rent and garbage fee of $garbage')";
+            VALUES ('Admin ($username)', '$timesnap', '$username added a new property ($hname) with $numofrooms number of rooms, $numOfbRooms bedrooms per unit, located in $location and garbage fee of $garbage')";
 
             $mysqli->autocommit(FALSE);
             $state = true;
@@ -127,13 +126,7 @@ if (is_logged_in_temporary()) {
                                             <input type="number" min="0" required name="numOfbRooms" class="form-control" id="numOfbRooms" placeholder="Bedrooms. e.g. 0" required=""> </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label for="rent">Rent amount (PM): *</label>
-                                        <div class="input-group">
-                                            <div class="input-group-addon"><i class="fa fa-usd"></i></div>
-                                            <input type="number" required min="0" name="rent" class="form-control" id="rent" placeholder="Rent per month. e.g. 3000" required=""> </div>
-                                    </div>
-
+                                
                                     <div class="form-group">
                                         <label for="garbage">Garbage (PM): *</label>
                                         <div class="input-group">

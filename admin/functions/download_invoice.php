@@ -17,7 +17,7 @@ if (isset($_GET['invoice_number']) && isset($_GET['format'])) {
         tenants.tenant_name, 
         houses.house_name, 
         house_numbers.house_no, 
-        houses.rent_amount AS rent, 
+        house_numbers.rent_amount AS rent, 
         houses.garbage AS garbage, 
         water_readings.current_reading, 
         water_readings.previous_reading, 
@@ -68,7 +68,7 @@ if (isset($_GET['invoice_number']) && isset($_GET['format'])) {
             </style>
             <table width="100%">
                 <tr>
-                    <td><img src="logo.png" width="100" /></td>
+                    <td><img src="../images/icon.png" width="100" /></td>
                     <td class="company-details">
                         Nyumbani Homes<br>
                         Nairobi, Kenya.<br>

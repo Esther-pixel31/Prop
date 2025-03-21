@@ -10,7 +10,6 @@ if (isset($_POST['editHouse'])) {
     //1. collect data
     $hname = @uncrack($_POST['tname']);
     $numberOfRooms = @uncrack($_POST['tnum']);
-    $rent_amount = @uncrack($_POST['rent']);
     $status = @uncrack($_POST['oftype']);
     $hsid = @uncrack($_POST['hsid']);
 
@@ -18,7 +17,6 @@ if (isset($_POST['editHouse'])) {
         UPDATE `houses` SET 
         `house_name`='$hname',
         `number_of_rooms`='$numberOfRooms',
-        `rent_amount`='$rent_amount',
         `house_status`='$status' WHERE `houseID`='$hsid'
     ";
 

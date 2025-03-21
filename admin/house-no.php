@@ -24,7 +24,7 @@ if(!isset($_SESSION['email']) || empty($_SESSION['email'])){
 if (is_logged_in_temporary()) {
     #allow access
     // Modify the SQL query to select house_name and house status
-    $sql = "SELECT house_numbers.id, houses.house_name, house_numbers.house_no
+    $sql = "SELECT house_numbers.id, houses.house_name, house_numbers.house_no, house_numbers.rent_amount
             FROM house_numbers
             INNER JOIN houses ON house_numbers.house_id = houses.houseID";
     $query = mysqli_query($connection, $sql);
@@ -97,6 +97,7 @@ if (is_logged_in_temporary()) {
                                     <tr>
                                         <th>House Name</th>
                                         <th>House No</th>
+                                        <th>Rent Amount</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -104,6 +105,7 @@ if (is_logged_in_temporary()) {
                                     <tr>
                                         <th>House Name</th>
                                         <th>House No</th>
+                                        <th>Rent Amount</th>
                                         <th>Actions</th>
                                     </tr>
                                 </tfoot>
@@ -115,6 +117,7 @@ if (is_logged_in_temporary()) {
                                 <tr>
                                     <td>' . $row["house_name"] . '</td>
                                     <td>' . $row["house_no"] . '</td>
+                                    <td>' . $row["rent_amount"] . '</td>
                                     <td>
                                         <a href="#">
                                             <i class="fa fa-trash" data-toggle="modal" data-target="#responsive-modal' . $row["id"] . '" title="remove" style="color:red;"></i>

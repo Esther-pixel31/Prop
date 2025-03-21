@@ -4,13 +4,7 @@
     require_once "functions/db.php";
 
     // If session variable is not set it will redirect to login page
-
-    if(!isset($_SESSION['email']) || empty($_SESSION['email'])){
-
-      header("location: login.php");
-
-      exit;
-    }
+    session_start();
 
      if (is_logged_in_temporary()) {
         //allow access
@@ -55,12 +49,12 @@
                             <div class="row">
                                 <div class="col-sm-12 col-xs-12">
                                     <form action="functions/new_admin.php" method="post">
-                                        <!-- <div class="form-group">
+                                        <div class="form-group">
                                             <label for="exampleInputuname">User Name</label>
                                             <div class="input-group">
                                                 <div class="input-group-addon"><i class="ti-user"></i></div>
                                                 <input type="text" class="form-control" id="exampleInputuname" placeholder="Username"> </div>
-                                        </div> -->
+                                        </div> 
                                         <div class="form-group">
                                             <label for="uname">User Name</label>
                                             <div class="input-group">
