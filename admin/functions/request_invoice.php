@@ -1,59 +1,45 @@
-<?php 
-/*
-    THIS IS A STANDARD INPUT TEXTBOX ON NEW-PAYMENT.PHP
-  '<div class="form-group">
-        <label for="ddate">Invoice Due Date: </label>
-      <div class="input-group">
-          <div class="input-group-addon"><i class="fa fa-user"></i></div>
-          <input type="text" name="ddate" class="form-control" id="ddate" value="5" readonly=""> 
-      </div>
-    </div>'
-*/
- 
+<?php
 require_once "db.php";
 
 if (isset($_GET["q"])) {
- //our user has requested an invoice. get invoice ID, then get related data from viewInvoice
-  $invoiceId=$_GET['q'];
-  
-  $sql_invoice="SELECT * from `invoicesView` where `invoiceNumber`='$invoiceId'";
-  $invoice_query=mysqli_query($conn,$sql_invoice);
+  $invoiceNumber = $_GET["q"];
 
-  $record=mysqli_fetch_array($invoice_query,MYSQLI_BOTH);
+  // Fetch invoice & tenant data
+  $sql_invoice = "SELECT * FROM invoicesView WHERE invoiceNumber = '$invoiceNumber' LIMIT 1";
+  $res_invoice = mysqli_query($conn, $sql_invoice);
 
-  $tenantId=$record['tenantID'];
-  $invoicedate=$record['dateOfInvoice'];
-  $dueDate=$record['dateDue'];
-  $amountDue=$record['amountDue'];
+  if (mysqli_num_rows($res_invoice) > 0) {
+      $invoice = mysqli_fetch_assoc($res_invoice);
+      $tenantID = $invoice['tenantID'];
+      $tenantName = $invoice['tenant_name'];
 
-  echo "
-  <label>Invoice Date: <i>$invoicedate</i> </label><br>
-  <label>Invoice Due Date: <i>$dueDate</i> </label><br>
-  <label>Expected Amount: <i>KSh. $amountDue</i> </label><br>
-    <br>
+      // Fetch all unpaid invoices for this tenant
+      $sql_unpaid = "SELECT invoiceNumber, amountDue, dateOfInvoice FROM invoices WHERE tenantID='$tenantID' AND status='unpaid'";
+      $result_unpaid = mysqli_query($conn, $sql_unpaid);
 
-  <div class='form-group hidden'>
-        <label for='amount'>Expected Amount: </label>
-      <div class='input-group'>
-          <div class='input-group-addon'><i class='fa fa-usd'></i></div>
-          <input type='text' name='amountDue' class='form-control' id='amount' value='$amountDue' readonly=''> 
-      </div>
-  </div>
+      $totalDue = 0;
+      $invoiceList = '';
 
-  <div class='form-group hidden'>
-        <label for='tenID'>Tenant ID.: </label>
-      <div class='input-group'>
-          <div class='input-group-addon'><i class='fa fa-user'></i></div>
-          <input type='text' name='tenID' class='form-control' id='tenID' value='$tenantId' readonly=''> 
-      </div>
-  </div>
+      while ($row = mysqli_fetch_assoc($result_unpaid)) {
+          $invNo = $row['invoiceNumber'];
+          $due = $row['amountDue'];
+          $date = $row['dateOfInvoice'];
+          $totalDue += $due;
 
+          $invoiceList .= "<li>Invoice #: <strong>$invNo</strong> - Due: KSh <strong>$due</strong> ($date)</li>";
+      }
 
-    ";
-
-	
+      echo "<div class='alert alert-info'>
+              <strong>Tenant Name:</strong> $tenantName<br>
+              <strong>Total Due (All Unpaid Invoices):</strong> KSh $totalDue
+            </div>
+            <input type='hidden' name='tenID' value='$tenantID'>
+            <input type='hidden' name='amountDue' value='$totalDue'>
+            <ul style='list-style: none; padding-left: 0;'>$invoiceList</ul>";
+  } else {
+      echo "<div class='alert alert-warning'>Invoice not found.</div>";
+  }
+} else {
+  echo "<div class='alert alert-danger'>Invalid request.</div>";
 }
-
-	
-
 ?>
