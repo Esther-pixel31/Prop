@@ -27,97 +27,79 @@
              /*****************************************************
                                action add a new payment
              ***************************************************/
-                               if (isset($_POST['newPayment'])) {
-                           //admin requests to add a rental invoice payment.
-                           //this transaction affects the invoice,payments, and transaction tables 
-                                //STEPS
-                        /* 1. collect the information supplied
-                           2. prepare SQL statements
-                           3. set an attomic transaction to update tables
-                            */
+            if (isset($_POST['newPayment'])) {
+                // Step 1: Collect data
+                $tenantId = uncrack($_POST['tenID']);
+                $invoiceNumber = uncrack($_POST['invoiceNumber']); // starting invoice
+                $amountExpected = uncrack($_POST['amountDue']);
+                $amountPaid = uncrack($_POST['paidAmount']);
+                $mpesaCode = uncrack($_POST['mpesa']);
+            
+                $paymentDate = date('Y-m-d');
+                $timesnap = date('Y-m-d : H:i:s');
+            
+                // Get tenant info
+                $tenantData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `tenant_name`, `phone_number` FROM tenants WHERE tenantID='$tenantId'"));
+                $tnm = $tenantData['tenant_name'];
+                $phone = $tenantData['phone_number'];
+            
+                // Step 2: Begin atomic transaction
+                $mysqli->autocommit(FALSE);
+                $state = true;
+            
+                // Step 3: Log base payment with temp balance (we'll update after allocations)
+                $balance = $amountExpected - $amountPaid;
 
-                                //Step 1: gathering data
-                            $tenantId=uncrack($_POST['tenID']);
-                            $invoiceNumber=uncrack($_POST['invoiceNumber']);
-                            $amountExpected=uncrack($_POST['amountDue']);
-                            $amountPaid=uncrack($_POST['paidAmount']);
-                            $mpesaCode=uncrack($_POST['mpesa']);
-
-                            //derived variables
-                            $paymentDate=date('Y-m-d');
-                            $timesnap=date('Y-m-d : H:i:s');
-                            $balance=$amountExpected-$amountPaid;
-
-                            //generate account balance
-                            $sqtenant="SELECT `account`,`tenant_name`,`phone_number` from `tenants` where `tenantID`='$tenantId'";
-                            $tenquer=mysqli_query($conn,$sqtenant);
-                            $rec=mysqli_fetch_array($tenquer,MYSQLI_BOTH);
-                            $account=$rec['account']; //the user account balance
-                            $tnm=$rec['tenant_name']; //tenant name
-                            $firstName=substr($tnm,0,strpos($tnm, " "));
-                            $phone=$rec['phone_number'];//tenant's phone number
-
-                            //let's assume that the status shall remain 'unpaid,
-                            //proceed to test and update if client clears his/her pay
-                            $status='unpaid';
-
-                            if ($balance<1) {
-                                $status='paid';
-
-                                if ($balance<0) 
-                                {
-                                //client has overpaid. let's keep it in client's account
-                                $account+=($balance * -1); //make it positive, then store it
-                                }
-                            }else{
-                                $account+=$amountPaid;
-                            }
-
-                            //Step2: sql statements
-                            $sql_inv="UPDATE `invoices` set `amountDue`='$balance', `status`='$status' where `invoiceNumber`='$invoiceNumber'"; //invoice table
-
-                            $sql_ten="UPDATE `tenants` set `account`='$account' where `tenantID`='$tenantId'"; //update tenant account balance
-
-                            $sql_payment="INSERT INTO `payments`
-                                (`tenantID`, `invoiceNumber`, `expectedAmount`, `amountPaid`, `balance`, `mpesaCode`, `dateofPayment`) 
-                                VALUES ('$tenantId','$invoiceNumber','$amountExpected','$amountPaid','$balance','$mpesaCode','$paymentDate')";//inserts a new payment
-
-                            $sql_transactions="INSERT into `transactions` (`actor`,`time`,`description`)
-                            VALUES ('Admin ($username)', '$timesnap','$username added payment of $amountPaid for $tnm, under invoice ID: $invoiceNumber')";
-
-                            //Step 3: Running an atomic transactionto effect the three tables
-                                $mysqli->autocommit(FALSE);
-
-                                $state=true;
-
-                                $mysqli->query($sql_inv)?null: $state=false;
-                                $mysqli->query($sql_ten)?null: $state=false;
-                                $mysqli->query($sql_payment)?null: $state=false;
-                                $mysqli->query($sql_transactions)?null: $state=false;
-
-
-                            if ($state) 
-                            {
-                                //success. report error state 8
-                                $mysqli -> commit();
-
-                                     
-
-                                header("location:payments.php?state=8");
-                            }
-                            else
-                            {
-                                //rollback changes
-                                $mysqli -> rollback();
-                                //failed. report error state 9
-                               header("location:new-payment.php?state=9");
-
-                                
-                            }
-
-                        
+                $sql_payment = "INSERT INTO payments (tenantID, invoiceNumber, expectedAmount, amountPaid, balance, mpesaCode, dateofPayment)
+                VALUES ('$tenantId', '$invoiceNumber', '$amountExpected', '$amountPaid', '$balance', '$mpesaCode', '$paymentDate')";
+                
+                $state = $state && $mysqli->query($sql_payment);
+                $payment_id = $mysqli->insert_id;
+            
+                // Step 4: Auto-allocate payment to unpaid invoices
+                $remaining = $amountPaid;
+                $sql_unpaid = "SELECT * FROM invoices WHERE tenantID='$tenantId' AND status='unpaid' ORDER BY dateOfInvoice ASC";
+                $result = $mysqli->query($sql_unpaid);
+            
+                while ($inv = $result->fetch_assoc()) {
+                    if ($remaining <= 0) break;
+            
+                    $inv_no = $inv['invoiceNumber'];
+                    $due = $inv['amountDue'];
+            
+                    $allocate = min($remaining, $due);
+                    $remaining -= $allocate;
+                    $new_balance = $due - $allocate;
+                    $status = ($new_balance <= 0) ? 'paid' : 'unpaid';
+            
+                    // Update invoice
+                    $state = $state && $mysqli->query("UPDATE invoices SET amountDue='$new_balance', status='$status' WHERE invoiceNumber='$inv_no'");
+            
+                    // Record allocation
+                    $state = $state && $mysqli->query("INSERT INTO payment_invoice_allocations (payment_id, invoiceNumber, amount_allocated)
+                                                       VALUES ('$payment_id', '$inv_no', '$allocate')");
+                }
+            
+                // Step 5: Update the payment record with any leftover balance
+                $state = $state && $mysqli->query("UPDATE payments SET balance='$remaining' WHERE paymentID='$payment_id'");
+            
+                // Step 6: Log transaction
+                $sql_transactions = "INSERT INTO transactions (`actor`, `time`, `description`)
+                                     VALUES ('Admin ($username)', '$timesnap', '$username added payment of KSh $amountPaid for $tnm')";
+                $state = $state && $mysqli->query($sql_transactions);
+            
+                // Step 7: Commit or rollback
+                if ($state) {
+                    $mysqli->commit();
+                    header("location:payments.php?state=8");
+                } else {
+                    $mysqli->rollback();
+                    header("location:new-payment.php?state=9");
+                }
+            }
+            
                        
-                       }
+                    
 
 
     /*******************************************************
